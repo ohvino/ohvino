@@ -1,9 +1,6 @@
 import UIKit
 import Flutter
 
-import UIKit
-import Flutter
-
 class ERR {
     //serious
     public static let BLE_NOT_SUPPORTED = -1;
@@ -30,13 +27,15 @@ class ERR {
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
 
-	static let CHANNEL_START = "ble.ohvino.ru/start_ble";
-	static let CHANNEL_STOP = "ble.ohvino.ru/stop_ble";
-	static let CHANNEL_CHECK = "ble.ohvino.ru/check_ble";
-	static let CHANNEL_LIMIT = "ble.ohvino.ru/limit_ble";
-	static let NAME = "AhVino\r\n";
+	let CHANNEL_START = "ble.ohvino.ru/start_ble";
+	let CHANNEL_STOP = "ble.ohvino.ru/stop_ble";
+	let CHANNEL_CHECK = "ble.ohvino.ru/check_ble";
+	let CHANNEL_LIMIT = "ble.ohvino.ru/limit_ble";
+	let NAME = "AhVino\r\n";
 
-	static var SCAN_PERIOD = 25000
+	var SCAN_PERIOD = 25000
+    
+    var _count=0
 
 	override func application(
 		_ application: UIApplication,
@@ -60,11 +59,11 @@ class ERR {
 			}
 			if let myArgs = args as? [String: Any],
 				let tmpLimit = myArgs["limit"] as? Int {
-					SCAN_PERIOD = tmpLimit
-					result("Params limit received on iOS = \(tmpLimit)")
+                self.SCAN_PERIOD = tmpLimit
+					result( 1)
 				}
 			else {
-				result("iOS could not extract flutter arguments in method: (limit)")
+				result( 0)
 			}
 		})
 
@@ -72,11 +71,12 @@ class ERR {
 				                      binaryMessenger: controller.binaryMessenger)
 		checkChannel.setMethodCallHandler({
 			(call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
-				var resStr = "dfsgdsg";
-				result(resStr);
+            self._count+=1
+            let resStr = String(format: "%04d", self._count)+"1230331111-86 ";
+            result(resStr);
 		})
 
-		let stopChannel = FlutterMethodChannel(name: CHANNEL_LIMIT,
+		let stopChannel = FlutterMethodChannel(name: CHANNEL_STOP,
 				                      binaryMessenger: controller.binaryMessenger)
 		stopChannel.setMethodCallHandler({
 			(call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
