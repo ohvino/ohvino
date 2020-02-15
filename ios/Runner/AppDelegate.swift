@@ -24,6 +24,8 @@ class ERR {
     public static let BT_CANT_NOTIFIED = -16;
 }
 
+//let myBle = MyBle()
+
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
 
@@ -40,6 +42,10 @@ class ERR {
 	override func application(
 		_ application: UIApplication,
 		didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        
+//        let myBle = MyBle()
+//        myBle.bleStart()
+        MyBle.sharedInstance.bleStart()
 
 		let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
 

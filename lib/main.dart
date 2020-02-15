@@ -142,8 +142,8 @@ class PlusMinusButton extends Padding {
       )
   );
 
-  static const double _edgePlus = 16.0;
-  static const double _fontPlus = 40.0;
+  static const double _edgePlus = 10.0;
+  static const double _fontPlus = 30.0;
 
   MyHomePageState _parent;
   Function() _func;
