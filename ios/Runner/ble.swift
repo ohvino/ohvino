@@ -11,6 +11,8 @@ import CoreBluetooth
 private let sharedManager = MyBle()
 
 class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
+    
+    let bleName = "AhVino"
 
     var central_manager: CBCentralManager! = nil
 
@@ -23,7 +25,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     //peripheral manager
-    var peripheral: CBPeripheral?
+    var myPeripheral: CBPeripheral?
 
     //HM-10 service code
     let HMServiceCode = CBUUID(string: "0xFFE0")
@@ -43,6 +45,24 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         self.central_manager = CBCentralManager.init(delegate: self, queue: nil)
     }
 */
+    deinit {
+        if central_manager == nil {
+            return
+        }
+        if let myPeripheral = myPeripheral {
+            switch (myPeripheral.state) {
+            case.connected:
+                self.central_manager.cancelPeripheralConnection( myPeripheral)
+                print( "disconnect")
+            case .disconnected:
+                print( "disconnected")
+            case .connecting:
+                print( "connecting")
+            case .disconnecting:
+                print( "disconnecting")
+            }
+        }
+    }
     func bleStart() {
         if central_manager == nil {
             central_manager = CBCentralManager(delegate: self, queue: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: true, CBCentralManagerOptionShowPowerAlertKey: true])
@@ -55,8 +75,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager)
     {
         var consoleMsg = ""
-        switch (central.state)
-        {
+        switch (central.state) {
         case.poweredOff:
             consoleMsg = "BLE is Powered Off"
         case.poweredOn:
@@ -112,6 +131,12 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         let theRSSI = RSSI.floatValue
 //        peripheralArray.append([ peripheral, theRSSI])
         peripheralArray.append( (peripheral: peripheral, RSSI: theRSSI))
+        if peripheral.name!.starts( with: bleName) {
+            self.stopScanning();
+            myPeripheral = peripheral
+            print("AhVino found")
+            central.connect( peripheral, options: nil)
+        }
         peripheralArray.sort { $0.RSSI < $1.RSSI }
         print("discovered peripheral")
         print("There are \(peripheralArray.count) peripherals in the array")
@@ -120,8 +145,53 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     //create a link/connection to the peripheral
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral)
     {
-        peripheral.discoverServices(nil) //may need to remove this not sure it does much
-        print("connected to peripheral")
+        myPeripheral = peripheral
+        myPeripheral?.delegate = self
+        myPeripheral?.discoverServices(nil)
+        print("connected to peripheral:\(peripheral)")
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?)
+    {
+        print("didDiscoverServices begin")
+        if let error = error {
+            print("didDiscoverServices error: \(error)")
+            return
+        }
+        let services = peripheral.services
+//        print("found \(services.count) services! :\(services)")
+        print( "services! :\(String(describing: services))")
+        for service in peripheral.services!
+        {
+            peripheral.discoverCharacteristics([CBUUID(string: "FFE1")], for: service)
+        }
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?)
+    {
+        // check whether the characteristic we're looking for (0xFFE1) is present - just to be sure
+        print("reading this part")
+        for characteristic in service.characteristics!
+
+        {
+            if characteristic.uuid == CBUUID(string: "FFE1")
+            {
+                // subscribe to this value (so we'll get notified when there is serial data for us..)
+                peripheral.readValue(for: characteristic)
+                peripheral.setNotifyValue(true, for: characteristic)
+                peripheral.readValue(for: characteristic)
+                print ("subscribed to this value")
+            }
+        }
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        print("didUpdateValueFor begin")
+        if let error = error {
+            print("didUpdateValueFor error: \(error)")
+            return
+        }
+        print ("didUpdateValueFor: \(characteristic)")
     }
 
     //disconnect from the peripheral
