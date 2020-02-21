@@ -26,6 +26,8 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 
     //peripheral manager
     var myPeripheral: CBPeripheral?
+    var myService: CBService?
+    
 
     //HM-10 service code
     let HMServiceCode = CBUUID(string: "0xFFE0")
@@ -176,15 +178,27 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         {
             if characteristic.uuid == CBUUID(string: "FFE1")
             {
+                myService = service
                 // subscribe to this value (so we'll get notified when there is serial data for us..)
-                peripheral.readValue(for: characteristic)
+                peripheral.discoverDescriptors(for: characteristic)
+//                peripheral.readValue(for: characteristic)
                 peripheral.setNotifyValue(true, for: characteristic)
-                peripheral.readValue(for: characteristic)
+//               peripheral.readValue(for: characteristic)
                 print ("subscribed to this value")
             }
         }
     }
-    
+
+    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
+        print("didUpdateNotificationStateFor begin")
+        if let error = error {
+            print("didUpdateNotificationStateFor error: \(error)")
+            return
+        }
+        print ("didUpdateNotificationStateFor: ok")
+//        peripheral.readValue(for: characteristic)
+    }
+
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         print("didUpdateValueFor begin")
         if let error = error {
