@@ -73,7 +73,7 @@ public class MainActivity extends FlutterActivity {
     private static final String CHANNEL_STOP = "ble.ohvino.ru/stop_ble";
     private static final String CHANNEL_CHECK = "ble.ohvino.ru/check_ble";
     private static final String CHANNEL_LIMIT = "ble.ohvino.ru/limit_ble";
-    private static final String NAME = "AhVino\r\n";
+    private static final String NAME = "AhVino"; //\r\n";
 
 //    Result mFlutterResult = null;
     private void SendToFlutter(int res) {
