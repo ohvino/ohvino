@@ -13,6 +13,11 @@ private let sharedManager = MyBle()
 class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     let bleName = "AhVino"
+    
+    private var mError : NSNumber = 0
+    func GetError() -> NSNumber {
+        return mError
+    }
 
     var central_manager: CBCentralManager! = nil
 
@@ -66,6 +71,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         }
     }
     func bleStart() {
+        mError = 0
         if central_manager == nil {
             central_manager = CBCentralManager(delegate: self, queue: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: true, CBCentralManagerOptionShowPowerAlertKey: true])
         }
