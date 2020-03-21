@@ -35,7 +35,7 @@ class ERR {
 	let CHANNEL_STOP = "ble.ohvino.ru/stop_ble";
 	let CHANNEL_CHECK = "ble.ohvino.ru/check_ble";
 	let CHANNEL_LIMIT = "ble.ohvino.ru/limit_ble";//
-	let NAME = "AhVino\r\n";
+	let NAME = "AhVino";
 
 	var SCAN_PERIOD = 25000
     

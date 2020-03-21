@@ -15,6 +15,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     let bleName = "AhVino"
     
     private var mError : NSNumber = 0
+    
     func GetError() -> NSNumber {
         return mError
     }
@@ -32,7 +33,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     //peripheral manager
     var myPeripheral: CBPeripheral?
     var myService: CBService?
-    
+    var myCharacteristic: CBCharacteristic?
 
     //HM-10 service code
     let HMServiceCode = CBUUID(string: "0xFFE0")
@@ -71,7 +72,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         }
     }
     func bleStart() {
-        mError = 0
+        mError = ERR.BT_UNKNOWN
         if central_manager == nil {
             central_manager = CBCentralManager(delegate: self, queue: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: true, CBCentralManagerOptionShowPowerAlertKey: true])
         }
@@ -86,8 +87,10 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         switch (central.state) {
         case.poweredOff:
             consoleMsg = "BLE is Powered Off"
+            mError = ERR.BT_NOT_ENABLE
         case.poweredOn:
             consoleMsg = "BLE is Powered On"
+            mError = ERR.BT_SCAN_FAILED
             self.startScan()
          case.resetting:
             consoleMsg = "BLE is resetting"
@@ -95,6 +98,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             consoleMsg = "BLE is in an unknown state"
         case.unsupported:
             consoleMsg = "This device is not supported by BLE"
+            mError = ERR.BLE_NOT_SUPPORTED
         case.unauthorized:
             consoleMsg = "BLE is not authorised"
         }
@@ -153,9 +157,10 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     //create a link/connection to the peripheral
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral)
     {
+        mError = ERR.BT_SERVICE_NOT_FOUND
         myPeripheral = peripheral
         myPeripheral?.delegate = self
-        myPeripheral?.discoverServices(nil)
+        myPeripheral?.discoverServices([HMServiceCode])
         print("connected to peripheral:\(peripheral)")
     }
 
@@ -169,6 +174,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         let services = peripheral.services
 //        print("found \(services.count) services! :\(services)")
         print( "services! :\(String(describing: services))")
+        mError = ERR.BT_CHAR_NOT_FOUND
         for service in peripheral.services!
         {
             peripheral.discoverCharacteristics([CBUUID(string: "FFE1")], for: service)
@@ -178,39 +184,54 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?)
     {
         // check whether the characteristic we're looking for (0xFFE1) is present - just to be sure
-        print("reading this part")
+        print("didDiscoverCharacteristicsFor begin")
+        if let error = error {
+             print("didDiscoverCharacteristicsFor error: \(error)")
+             return
+         }
         for characteristic in service.characteristics!
 
         {
             if characteristic.uuid == CBUUID(string: "FFE1")
             {
+                mError = ERR.BT_DESCR_NOT_FOUND
                 myService = service
-                // subscribe to this value (so we'll get notified when there is serial data for us..)
                 peripheral.discoverDescriptors(for: characteristic)
 //                peripheral.readValue(for: characteristic)
-                peripheral.setNotifyValue(true, for: characteristic)
-//               peripheral.readValue(for: characteristic)
-                print ("subscribed to this value")
             }
         }
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverDescriptorsFor service: CBService, error: Error?)
+    {
+        print("didDiscoverDescriptorsFor begin")
+        if let error = error {
+             print("didDiscoverDescriptorsFor error: \(error)")
+             return
+        }
+        peripheral.setNotifyValue(true, for: myCharacteristic!)
+//        peripheral.readValue(for: myCharacteristic!)
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
         print("didUpdateNotificationStateFor begin")
         if let error = error {
             print("didUpdateNotificationStateFor error: \(error)")
+            mError = ERR.BT_CANT_NOTIFIED
             return
         }
         print ("didUpdateNotificationStateFor: ok")
-//        peripheral.readValue(for: characteristic)
+        peripheral.readValue(for: characteristic)
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         print("didUpdateValueFor begin")
         if let error = error {
             print("didUpdateValueFor error: \(error)")
+            mError = ERR.BT_CANT_READ
             return
         }
+        mError = 0
         print ("didUpdateValueFor: \(characteristic)")
     }
 
