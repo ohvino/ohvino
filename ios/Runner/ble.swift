@@ -15,10 +15,19 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     let bleName = "AhVino"
     
     private var mError : NSNumber = 0
-    
     func GetError() -> NSNumber {
         return mError
     }
+
+    private var mResult = ""
+    func GetResult() -> String {
+	return mResult
+    }
+
+    func IsConnected() -> Bool {
+	return mError==0
+    }
+   
 
     var central_manager: CBCentralManager! = nil
 
@@ -232,13 +241,29 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             return
         }
         mError = 0
+	let data = characteristic.value
+	mResult = String(data: data, encoding: String.Encoding.utf8).prefix(14)
+	peripheral.readRSSI()
         print ("didUpdateValueFor: \(characteristic)")
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
+        print("didReadRSSI begin")
+        if let error = error {
+            print("didReadRSSI error: \(error)")
+            mError = ERR.BT_CANT_READ
+            return
+        }
+ 	let ptsString = String(format: "%3d", RSSI)
+	mResult += ptsString
+        print ("didReadRSSI: \(mResult)")
     }
 
     //disconnect from the peripheral
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?)
     {
         print("disconnected from peripheral")
+	mError = ERR.NOT_CONNECTED_DEVICE
         stopScanning()
     }
 
@@ -246,6 +271,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?)
     {
         print("failed to connect to peripheral")
+	mError = ERR.NOT_CONNECTED_DEVICE
         stopScanning()
     }
 

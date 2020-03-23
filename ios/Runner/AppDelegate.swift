@@ -82,9 +82,13 @@ class ERR {
 				                      binaryMessenger: controller.binaryMessenger)
 		checkChannel.setMethodCallHandler({
 			(call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
-            self._count+=1
-            let resStr = String(format: "%04d", self._count)+"1630331111-86 ";
-            result(resStr);
+	      if !MyBle.sharedInstance.IsConnected() {
+		 result( "Error: " + String( format: "%04d", MyBle.sharedInstance.GetError())
+		return
+	      }
+ //           self._count+=1
+ //           let resStr = String(format: "%04d", self._count)+"1630331111-86 ";
+            result(MyBle.sharedInstance.GetResult());
 		})
 
 		let stopChannel = FlutterMethodChannel(name: CHANNEL_STOP,
