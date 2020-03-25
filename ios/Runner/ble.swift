@@ -14,8 +14,8 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     let bleName = "AhVino"
     
-    private var mError : NSNumber = 0
-    func GetError() -> NSNumber {
+    private var mError : Int = 0
+    func GetError() -> Int {
         return mError
     }
 
@@ -25,9 +25,10 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     func IsConnected() -> Bool {
-	return mError==0
+	return isRealConnection
     }
    
+    private var isRealConnection = false
 
     var central_manager: CBCentralManager! = nil
 
@@ -93,6 +94,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager)
     {
         var consoleMsg = ""
+	isRealConnection = false
         switch (central.state) {
         case.poweredOff:
             consoleMsg = "BLE is Powered Off"
@@ -254,9 +256,10 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             mError = ERR.BT_CANT_READ
             return
         }
- 	let ptsString = String(format: "%3d", RSSI)
+ 	let ptsString = String(format: "%03d", Int( RSSI))
 	mResult += ptsString
         print ("didReadRSSI: \(mResult)")
+	isRealConnection = true
     }
 
     //disconnect from the peripheral
