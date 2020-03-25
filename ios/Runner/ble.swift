@@ -267,6 +267,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     {
         print("disconnected from peripheral")
 	mError = ERR.NOT_CONNECTED_DEVICE
+	isRealConnection = false
         stopScanning()
     }
 
@@ -275,6 +276,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     {
         print("failed to connect to peripheral")
 	mError = ERR.NOT_CONNECTED_DEVICE
+	isRealConnection = false
         stopScanning()
     }
 
