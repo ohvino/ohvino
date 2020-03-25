@@ -21,7 +21,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 
     private var mResult = ""
     func GetResult() -> String {
-	return mResult
+        return mResult
     }
 
     func IsConnected() -> Bool {
@@ -188,7 +188,8 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         mError = ERR.BT_CHAR_NOT_FOUND
         for service in peripheral.services!
         {
-            peripheral.discoverCharacteristics([CBUUID(string: "FFE1")], for: service)
+            peripheral.discoverCharacteristics( nil, for: service)
+//            peripheral.discoverCharacteristics([CBUUID(string: "FFE1")], for: service)
         }
     }
     
@@ -201,15 +202,17 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
              return
          }
         for characteristic in service.characteristics!
-
         {
             if characteristic.uuid == CBUUID(string: "FFE1")
             {
                 mError = ERR.BT_DESCR_NOT_FOUND
                 myService = service
+                myCharacteristic = characteristic
+                print( "FFE1 found")
                 peripheral.discoverDescriptors(for: characteristic)
-//                peripheral.readValue(for: characteristic)
-            }
+                peripheral.setNotifyValue(true, for: myCharacteristic!)
+//                peripheral.readValue(for: myCharacteristic!)
+             }
         }
     }
     
@@ -232,7 +235,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             return
         }
         print ("didUpdateNotificationStateFor: ok")
-        peripheral.readValue(for: characteristic)
+//        peripheral.readValue(for: characteristic)
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
@@ -242,11 +245,13 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             mError = ERR.BT_CANT_READ
             return
         }
-        mError = 0
-	let data = characteristic.value
-	mResult = String(data: data, encoding: String.Encoding.utf8).prefix(14)
-	peripheral.readRSSI()
         print ("didUpdateValueFor: \(characteristic)")
+        mError = 0
+        let data = characteristic.value
+        let str = String(data: data!, encoding: String.Encoding.ascii) //utf8)
+        mResult = String(str!.prefix(14))
+        print ("didUpdateValueFor data: \(mResult)")
+        peripheral.readRSSI()
     }
 
     func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
