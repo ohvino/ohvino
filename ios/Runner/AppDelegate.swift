@@ -3,27 +3,27 @@ import Flutter
 
 class ERR {
     //serious
-    public static let BLE_NOT_SUPPORTED  :  NSNumber = -1;
-    public static let CANNOT_GET_BLE_ADAPTER  :  NSNumber = -2;
-    public static let BT_NOT_ENABLE  :  NSNumber = -3;
-    public static let NO_BT_SCANNER  :  NSNumber = -4;
+    public static let BLE_NOT_SUPPORTED  :  Int = -1;
+    public static let CANNOT_GET_BLE_ADAPTER  :  Int = -2;
+    public static let BT_NOT_ENABLE  :  Int = -3;
+    public static let NO_BT_SCANNER  :  Int = -4;
 
-    public static let NO_LOCATION_PERMISSION  :  NSNumber = -5;
-    public static let SERIOUS  :  NSNumber = -5;
+    public static let NO_LOCATION_PERMISSION  :  Int = -5;
+    public static let SERIOUS  :  Int = -5;
     // not serious
-    public static let NO_BT_DEVICE  :  NSNumber = -6;
-    public static let NO_BT_GATT  :  NSNumber = -7;
-    public static let NOT_FOUND_DEVICE  :  NSNumber = -8;
-    public static let NOT_CONNECTED_DEVICE  :  NSNumber = -9;
-    public static let BT_BATCH_SCAN  :  NSNumber = -10;
-    public static let BT_SCAN_FAILED  :  NSNumber = -11;
-    public static let BT_SERVICE_NOT_FOUND  :  NSNumber = -12;
-    public static let BT_CANT_READ  :  NSNumber = -13;
-    public static let BT_CHAR_NOT_FOUND  :  NSNumber = -14;
-    public static let BT_DESCR_NOT_FOUND  :  NSNumber = -15;
-    public static let BT_CANT_NOTIFIED :  NSNumber = -16;
+    public static let NO_BT_DEVICE  :  Int = -6;
+    public static let NO_BT_GATT  :  Int = -7;
+    public static let NOT_FOUND_DEVICE  :  Int = -8;
+    public static let NOT_CONNECTED_DEVICE  :  Int = -9;
+    public static let BT_BATCH_SCAN  :  Int = -10;
+    public static let BT_SCAN_FAILED  :  Int = -11;
+    public static let BT_SERVICE_NOT_FOUND  :  Int = -12;
+    public static let BT_CANT_READ  :  Int = -13;
+    public static let BT_CHAR_NOT_FOUND  :  Int = -14;
+    public static let BT_DESCR_NOT_FOUND  :  Int = -15;
+    public static let BT_CANT_NOTIFIED :  Int = -16;
     
-    public static let BT_UNKNOWN :  NSNumber = -1000;
+    public static let BT_UNKNOWN :  Int = -1000;
 }
 
 //let myBle = MyBle()
@@ -82,14 +82,19 @@ class ERR {
 				                      binaryMessenger: controller.binaryMessenger)
 		checkChannel.setMethodCallHandler({
 			(call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
-	      if !MyBle.sharedInstance.IsConnected() {
-            result( "Error: " + String( format: "%04d", MyBle.sharedInstance.GetError()))
-            return
-	      }
- //           self._count+=1
- //           let resStr = String(format: "%04d", self._count)+"1630331111-86 ";
-            result(MyBle.sharedInstance.GetResult());
-		})
+            print("CHANNEL_CHECK called")
+            if !MyBle.sharedInstance.IsConnected() {
+                let err = MyBle.sharedInstance.GetError()
+                print("CHANNEL_CHECK error \(err)")
+                result( "Error: " + String( format: "%04d", err))
+                return
+            }
+            //           self._count+=1
+            //           let resStr = String(format: "%04d", self._count)+"1630331111-86 ";
+            let str = MyBle.sharedInstance.GetResult() + " "
+            print("CHANNEL_CHECK finished \(str)")
+            result( str);
+        })
 
 		let stopChannel = FlutterMethodChannel(name: CHANNEL_STOP,
 				                      binaryMessenger: controller.binaryMessenger)

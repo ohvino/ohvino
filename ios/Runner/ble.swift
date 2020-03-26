@@ -64,6 +64,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 */
     deinit {
+        isRealConnection = false
         if central_manager == nil {
             return
         }
@@ -94,7 +95,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager)
     {
         var consoleMsg = ""
-	isRealConnection = false
+        isRealConnection = false
         switch (central.state) {
         case.poweredOff:
             consoleMsg = "BLE is Powered Off"
@@ -113,7 +114,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         case.unauthorized:
             consoleMsg = "BLE is not authorised"
         }
-        print("\(consoleMsg)")
+        //print("\(consoleMsg)")
     }
 
     //MARK: scanning
@@ -126,7 +127,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func startTimer()  {
         //after 5 seconds this goes to the stop scanning routine
         timer = Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(MyBle.stopScanning), userInfo: nil, repeats: true)
-        print("Start Scan")
+        //print("Start Scan")
         central_manager?.scanForPeripherals(withServices: nil, options: nil)
 //        central_manager?.scanForPeripherals(withServices: [HMServiceCode], options: nil)
     }
@@ -134,12 +135,12 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     @objc func stopScanning()
     {
         timer?.invalidate()
-        print("timer stopped")
+        //print("timer stopped")
         central_manager?.stopScan()
-        print("Scan Stopped")
-        print("array items are: \(peripheralArray)")
-//        print("peripheral items are: \(peripheral)")
-//        print("manager items are: \(central_manager)")
+        //print("Scan Stopped")
+        //print("array items are: \(peripheralArray)")
+//        //print("peripheral items are: \(peripheral)")
+//        //print("manager items are: \(central_manager)")
     }
 
     //MARK: Connection to bluetooth
@@ -157,12 +158,12 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         if peripheral.name!.starts( with: bleName) {
             self.stopScanning();
             myPeripheral = peripheral
-            print("AhVino found")
+            //print("AhVino found")
             central.connect( peripheral, options: nil)
         }
         peripheralArray.sort { $0.RSSI < $1.RSSI }
-        print("discovered peripheral")
-        print("There are \(peripheralArray.count) peripherals in the array")
+        //print("discovered peripheral")
+        //print("There are \(peripheralArray.count) peripherals in the array")
     }
 
     //create a link/connection to the peripheral
@@ -172,19 +173,19 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         myPeripheral = peripheral
         myPeripheral?.delegate = self
         myPeripheral?.discoverServices([HMServiceCode])
-        print("connected to peripheral:\(peripheral)")
+        //print("connected to peripheral:\(peripheral)")
     }
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?)
     {
-        print("didDiscoverServices begin")
+        //print("didDiscoverServices begin")
         if let error = error {
-            print("didDiscoverServices error: \(error)")
+            //print("didDiscoverServices error: \(error)")
             return
         }
         let services = peripheral.services
-//        print("found \(services.count) services! :\(services)")
-        print( "services! :\(String(describing: services))")
+//        //print("found \(services.count) services! :\(services)")
+        //print( "services! :\(String(describing: services))")
         mError = ERR.BT_CHAR_NOT_FOUND
         for service in peripheral.services!
         {
@@ -196,9 +197,9 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?)
     {
         // check whether the characteristic we're looking for (0xFFE1) is present - just to be sure
-        print("didDiscoverCharacteristicsFor begin")
+        //print("didDiscoverCharacteristicsFor begin")
         if let error = error {
-             print("didDiscoverCharacteristicsFor error: \(error)")
+             //print("didDiscoverCharacteristicsFor error: \(error)")
              return
          }
         for characteristic in service.characteristics!
@@ -208,7 +209,7 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                 mError = ERR.BT_DESCR_NOT_FOUND
                 myService = service
                 myCharacteristic = characteristic
-                print( "FFE1 found")
+                //print( "FFE1 found")
                 peripheral.discoverDescriptors(for: characteristic)
                 peripheral.setNotifyValue(true, for: myCharacteristic!)
 //                peripheral.readValue(for: myCharacteristic!)
@@ -218,70 +219,70 @@ class MyBle: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverDescriptorsFor service: CBService, error: Error?)
     {
-        print("didDiscoverDescriptorsFor begin")
+        //print("didDiscoverDescriptorsFor begin")
         if let error = error {
-             print("didDiscoverDescriptorsFor error: \(error)")
+             //print("didDiscoverDescriptorsFor error: \(error)")
              return
         }
-        peripheral.setNotifyValue(true, for: myCharacteristic!)
+//        peripheral.setNotifyValue(true, for: myCharacteristic!)
 //        peripheral.readValue(for: myCharacteristic!)
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
-        print("didUpdateNotificationStateFor begin")
+        //print("didUpdateNotificationStateFor begin")
         if let error = error {
-            print("didUpdateNotificationStateFor error: \(error)")
+            //print("didUpdateNotificationStateFor error: \(error)")
             mError = ERR.BT_CANT_NOTIFIED
             return
         }
-        print ("didUpdateNotificationStateFor: ok")
+        //print ("didUpdateNotificationStateFor: ok")
 //        peripheral.readValue(for: characteristic)
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        print("didUpdateValueFor begin")
+        //print("didUpdateValueFor begin")
         if let error = error {
-            print("didUpdateValueFor error: \(error)")
+            //print("didUpdateValueFor error: \(error)")
             mError = ERR.BT_CANT_READ
             return
         }
-        print ("didUpdateValueFor: \(characteristic)")
+        //print ("didUpdateValueFor: \(characteristic)")
         mError = 0
         let data = characteristic.value
         let str = String(data: data!, encoding: String.Encoding.ascii) //utf8)
         mResult = String(str!.prefix(14))
-        print ("didUpdateValueFor data: \(mResult)")
+        //print ("didUpdateValueFor data: \(mResult)")
         peripheral.readRSSI()
     }
 
     func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
-        print("didReadRSSI begin")
+        //print("didReadRSSI begin")
         if let error = error {
-            print("didReadRSSI error: \(error)")
+            //print("didReadRSSI error: \(error)")
             mError = ERR.BT_CANT_READ
             return
         }
- 	let ptsString = String(format: "%03d", Int( RSSI))
-	mResult += ptsString
-        print ("didReadRSSI: \(mResult)")
-	isRealConnection = true
+        let ptsString = String(format: "%03d", RSSI.intValue)
+        mResult += ptsString
+        //print ("didReadRSSI: \(mResult)")
+        isRealConnection = true
     }
 
     //disconnect from the peripheral
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?)
     {
-        print("disconnected from peripheral")
-	mError = ERR.NOT_CONNECTED_DEVICE
-	isRealConnection = false
+        //print("disconnected from peripheral")
+        mError = ERR.NOT_CONNECTED_DEVICE
+        isRealConnection = false
         stopScanning()
     }
 
     //if it failed to connect to a peripheral will tell us (although not why)
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?)
     {
-        print("failed to connect to peripheral")
-	mError = ERR.NOT_CONNECTED_DEVICE
-	isRealConnection = false
+        //print("failed to connect to peripheral")
+        mError = ERR.NOT_CONNECTED_DEVICE
+        isRealConnection = false
         stopScanning()
     }
 
