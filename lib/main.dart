@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'notification.dart';
 import 'ble.dart';
@@ -31,13 +31,16 @@ class ERR {
   static const int BT_CANT_NOTIFIED = -16;
 }
 
-
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+     ]);
     return MaterialApp(
       title: 'Ohvino Demo',
+      debugShowCheckedModeBanner: false ,
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -49,6 +52,8 @@ class MyApp extends StatelessWidget {
         // Notice that the counter didn't reset back to zero; the application
         // is not restarted.
         primarySwatch: Colors.blue,
+//        backgroundColor: Colors.grey,
+        scaffoldBackgroundColor: Color( 0xFFFDDDDDD), //Colors.grey[50],
       ),
       home: MyHomePage(title: 'OhVino - сделай вино вкуснее!'), //tastier
     );
@@ -124,28 +129,60 @@ class MyHomePage extends StatefulWidget {
   MyHomePageState createState() => MyHomePageState();
 }
 
-class PlusMinusButton extends Padding {
-  PlusMinusButton(this._parent, String txt, this._func) : super (
-    padding: EdgeInsets.all(_edgePlus),
-      child: RaisedButton(
-        padding: EdgeInsets.all(_edgePlus),
-        color: Colors.blue,
-        textColor: Colors.white,
+class PresetTempButton extends Visibility {
+  PresetTempButton( String txt, Color colorBack, Color colorTxt, double this._temperature, this._func, bool vision) : super (
+    child: Padding(
+        padding: EdgeInsets.all(_padPreset),
+        child: RaisedButton(
+          padding: EdgeInsets.all(_edgePreset),
+          shape: new RoundedRectangleBorder( side: new BorderSide(width: 1.0, color: Colors.black),
+              borderRadius: new BorderRadius.circular(20.0)),
+          color: colorBack,
+          textColor: colorTxt,
           child: Text( txt,
             style: TextStyle(
-            fontSize: _fontPlus,
-            fontWeight: FontWeight.bold,
-            textBaseline: TextBaseline.alphabetic
+                fontSize: _fontPreset,
+                fontWeight: FontWeight.bold,
+                textBaseline: TextBaseline.alphabetic
             ),
           ),
-        onPressed: _func,
-      )
+          onPressed: () => _func( _temperature),
+        )
+    ),
+    visible: vision,
   );
-
-  static const double _edgePlus = 10.0;
-  static const double _fontPlus = 30.0;
+  static const double _edgePreset = 20.0;
+  static const double _padPreset = 15.0;
+  static const double _fontPreset = 20.0;
 
   MyHomePageState _parent;
+  double _temperature;
+  Function(double tempearture) _func;
+}
+
+class PlusMinusButton extends Padding {
+  PlusMinusButton( String txt, this._func) : super (
+    padding: EdgeInsets.all(_edgePlus),
+    child: RaisedButton(
+      padding: EdgeInsets.all(_edgePlus),
+      shape: new RoundedRectangleBorder( side: new BorderSide(width: 3.0, color: Colors.black),
+          borderRadius: new BorderRadius.circular(30.0)),
+      color: Colors.blue,
+      textColor: Colors.white,
+        child: Text( txt,
+          style: TextStyle(
+          fontSize: _fontPlus,
+          fontWeight: FontWeight.bold,
+          textBaseline: TextBaseline.alphabetic
+          ),
+        ),
+      onPressed: _func,
+    )
+  );
+
+  static const double _edgePlus = 15.0;
+  static const double _fontPlus = 40.0;
+
   Function() _func;
 }
 
@@ -221,6 +258,8 @@ class MyHomePageState extends State<MyHomePage> {
   int _minute = 0;
   int _secunds = 0;
 
+  Visibility _minusButton;
+  Visibility _plusButton;
 
   void _fillFromVineBox( VinoBox vinoBox) {
     setState(() {
@@ -278,6 +317,12 @@ class MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _presetPressed( double temperature) {
+    setState(() {
+      _targetTemp = temperature;
+    });
+  }
+
   static const double _incTemp = 0.5;
 
   void _minusPressed() {
@@ -310,7 +355,6 @@ class MyHomePageState extends State<MyHomePage> {
       isStart = !isStart;
 //            _showDialog();
     });
-
   }
 
   static const String _start = "Start";
@@ -320,6 +364,11 @@ class MyHomePageState extends State<MyHomePage> {
   Color _floatColor = Colors.green;
   static const double _fontPlus = 40.0;
 
+  bool _debug = false;
+
+//  void _setVisability( bool bleStrted) {
+//    _plusButton.visible = !bleStrted;
+//  }
 
   @override
   Widget build(BuildContext context) {
@@ -352,44 +401,88 @@ class MyHomePageState extends State<MyHomePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  PlusMinusButton( this, '-', _minusPressed),
-                  Text('$_targetTemp',
-                    style: TextStyle(
-                        fontSize: _fontPlus,
-                        fontWeight: FontWeight.bold,
-                        textBaseline: TextBaseline.alphabetic
-                    ),
+                  _minusButton = Visibility( child: PlusMinusButton( '-', _minusPressed), visible: !isStart, ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Text('$_targetTemp',
+                         style: TextStyle(
+                            fontSize: _fontPlus,
+                            fontWeight: FontWeight.bold,
+                           textBaseline: TextBaseline.alphabetic
+                        ),
+                      ),
+                      Text('цель t°',
+                        style: TextStyle(
+                            fontSize: 25.0,
+                            fontWeight: FontWeight.bold,
+                            textBaseline: TextBaseline.alphabetic
+                        ),
+                      ),
+                    ],
                   ),
-                  PlusMinusButton( this, '+', _plusPressed),
+                  _plusButton = Visibility( child: PlusMinusButton(  '+', _plusPressed), visible: !isStart, ),
                 ]
             ),
-            Text(
-              '$_msg',
-              style: Theme.of(context).textTheme.title,
+            PresetTempButton( "Красное вино", Color( 0xFF7b002c), Colors.white, 14.0, _presetPressed, !isStart),
+            PresetTempButton( "Белое вино", Colors.white, Colors.black, 10.0, _presetPressed, !isStart),
+            PresetTempButton( "Шампаское", Color(0xDAFAFAD2), Colors.black, 8.0, _presetPressed, !isStart),
+            Visibility( child: SizedBox(height: 30) , visible: !isStart, ),
+            Visibility( child: SizedBox(height: 10) , visible: _debug && isStart, ),
+            Visibility( child:
+              Text(
+                '$_msg',
+                style: Theme.of(context).textTheme.title,
+              ),
+              visible: _debug  && isStart,
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
+            Visibility( child:
+              Text(
+                '$_counter',
+                    style: Theme.of(context).textTheme.display1,
+                ),
+                visible: _debug  && isStart,
             ),
-            Text(
-              'Wine t: '+'$_tWine' + '°C',
-              style: Theme.of(context).textTheme.display1,
+            Visibility( child: SizedBox(height: 20) , visible: isStart, ),
+           Visibility( child:
+              Text(
+                  'Факт: '+'$_tWine' + '°C',
+                  style: TextStyle(
+                      fontSize: 35.0,
+                      fontWeight: FontWeight.bold,
+                      textBaseline: TextBaseline.alphabetic,
+                      color: Colors.blue,
+                  ),
+                ),
+              visible: isStart,
             ),
-            Text(
-              'Ext t: '+'$_tEnv' + '°C',
-              style: Theme.of(context).textTheme.display1,
+            Visibility( child:
+              Text(
+                        'Ext t: '+'$_tEnv' + '°C',
+                        style: Theme.of(context).textTheme.display1,
+                      ),
+              visible: _debug && isStart,
             ),
-            Text(
-              'Batt: '+'$_vBat'+'V',
-              style: Theme.of(context).textTheme.display1,
+            Visibility( child:
+              Text(
+                        'Batt: '+'$_vBat'+'V',
+                        style: Theme.of(context).textTheme.display1,
+                      ),
+              visible: _debug && isStart,
             ),
-            Text(
-              'RSSI: '+'$_rSSI',
-              style: Theme.of(context).textTheme.display1,
+            Visibility( child:
+              Text(
+                      'RSSI: '+'$_rSSI',
+                      style: Theme.of(context).textTheme.display1,
+                    ),
+              visible: _debug  && isStart,
             ),
-            Text(
-              'Minutes: '+'$_minute'+':'+'$_secunds',
-              style: Theme.of(context).textTheme.display1,
+            Visibility( child:
+              Text(
+                        'Minutes: '+'$_minute'+':'+'$_secunds',
+                        style: Theme.of(context).textTheme.display1,
+                      ),
+                visible: _debug  && isStart,
             ),
           ],
         ),
