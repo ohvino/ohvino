@@ -16,6 +16,9 @@ class BleDevice {
 
   int _limitSet = 0;
 
+  bool _isConnected = false;
+  bool IsConnected() {return  _isConnected;}
+
   String _resultStr;
   VinoBox _vinoBox = VinoBox();
 
@@ -83,10 +86,12 @@ class BleDevice {
       _readDataStart();
       return;
     }
+    _isConnected = true;
     _myHomePage.bleCheckSuccess( _vinoBox);
   }
 
   void _bleDataError() {
+    _isConnected = false;
     _isCheckError = true;
   }
 

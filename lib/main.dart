@@ -42,15 +42,6 @@ class MyApp extends StatelessWidget {
       title: 'Ohvino Demo',
       debugShowCheckedModeBanner: false ,
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         primarySwatch: Colors.blue,
 //        backgroundColor: Colors.grey,
         scaffoldBackgroundColor: Color( 0xFFFDDDDDD), //Colors.grey[50],
@@ -113,15 +104,6 @@ class VinoBox {
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
@@ -190,7 +172,7 @@ class PlusMinusButton extends Padding {
 
 class MyHomePageState extends State<MyHomePage> {
 
-  int _initTimeLimit = 16;
+  int _initTimeLimit = 21;
 
   MyHomePageState() {
     _bleDevice = BleDevice( this, _initTimeLimit);
@@ -232,18 +214,21 @@ class MyHomePageState extends State<MyHomePage> {
 
   void bleIsConnected() {
     _initProgressStop();
-    _setMessage('Connected');
+    _setMessage('Ждём-с...'); //
   }
 
   void bleCheckFlutterError( String error) {
     _setMessage('bleCheckFlutterError '+ error);
   }
 
-  void bleCheckDisconnectedSuddenly() {}
-  void bleCheckSomeError( int result) {}
+  void bleCheckDisconnectedSuddenly() {
+  }
+
+  void bleCheckSomeError( int result) {
+  }
 
   void bleCheckSuccess( VinoBox vinoBox) {
-    _fillFromVineBox( vinoBox);
+   _fillFromVineBox( vinoBox);
   }
 
   void bleStop( ) {
@@ -257,9 +242,6 @@ class MyHomePageState extends State<MyHomePage> {
   int _rSSI = 0;
   int _minute = 0;
   int _secunds = 0;
-
-  Visibility _minusButton;
-  Visibility _plusButton;
 
   void _fillFromVineBox( VinoBox vinoBox) {
     setState(() {
@@ -401,7 +383,7 @@ class MyHomePageState extends State<MyHomePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  _minusButton = Visibility( child: PlusMinusButton( '-', _minusPressed), visible: !isStart, ),
+                  Visibility( child: PlusMinusButton( '-', _minusPressed), visible: !isStart, ),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
@@ -421,21 +403,26 @@ class MyHomePageState extends State<MyHomePage> {
                       ),
                     ],
                   ),
-                  _plusButton = Visibility( child: PlusMinusButton(  '+', _plusPressed), visible: !isStart, ),
+                  Visibility( child: PlusMinusButton(  '+', _plusPressed), visible: !isStart, ),
                 ]
             ),
             PresetTempButton( "Красное вино", Color( 0xFF7b002c), Colors.white, 14.0, _presetPressed, !isStart),
             PresetTempButton( "Белое вино", Colors.white, Colors.black, 10.0, _presetPressed, !isStart),
             PresetTempButton( "Шампаское", Color(0xDAFAFAD2), Colors.black, 8.0, _presetPressed, !isStart),
             Visibility( child: SizedBox(height: 30) , visible: !isStart, ),
-            Visibility( child: SizedBox(height: 10) , visible: _debug && isStart, ),
+            Visibility( child: SizedBox(height: 10) , visible: isStart, ),
             Visibility( child:
               Text(
                 '$_msg',
                 style: Theme.of(context).textTheme.title,
               ),
-              visible: _debug  && isStart,
+              visible: isStart,
             ),
+            Visibility( child: SizedBox(height: 20) , visible: isStart, ),
+            Visibility( child:
+              SizedBox(width: 80, height: 80, child: CircularProgressIndicator( strokeWidth: 5.0)),
+              visible: isStart && _bleDevice.IsConnected(),
+            ), //CircularProgressIndicator()
             Visibility( child:
               Text(
                 '$_counter',
@@ -516,7 +503,7 @@ class MyHomePageState extends State<MyHomePage> {
         _initProgressStop();
         return;
       }
-      _setMessage('BLE connecting... ${_initCounter} of ${_initTimeLimit} sec.');
+      _setMessage('Соединяемся... ${_initCounter} из ${_initTimeLimit} сек.');
     });
   }
 
